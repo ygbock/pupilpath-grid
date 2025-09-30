@@ -1,0 +1,231 @@
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus } from "lucide-react";
+
+interface Student {
+  id: string;
+  admissionNo: string;
+  name: string;
+  class: string;
+  section: string;
+  rollNo: string;
+  attendance: number;
+  status: 'active' | 'inactive' | 'transferred';
+  guardian: string;
+  phone: string;
+  avatar?: string;
+}
+
+const mockStudents: Student[] = [
+  {
+    id: '1',
+    admissionNo: 'ADM001',
+    name: 'Alice Johnson',
+    class: 'Grade 5',
+    section: 'A',
+    rollNo: '001',
+    attendance: 95,
+    status: 'active',
+    guardian: 'Robert Johnson',
+    phone: '+1 (555) 123-4567',
+  },
+  {
+    id: '2',
+    admissionNo: 'ADM002',
+    name: 'Bob Smith',
+    class: 'Grade 5',
+    section: 'A',
+    rollNo: '002',
+    attendance: 87,
+    status: 'active',
+    guardian: 'Mary Smith',
+    phone: '+1 (555) 234-5678',
+  },
+  {
+    id: '3',
+    admissionNo: 'ADM003',
+    name: 'Charlie Brown',
+    class: 'Grade 5',
+    section: 'B',
+    rollNo: '003',
+    attendance: 92,
+    status: 'active',
+    guardian: 'David Brown',
+    phone: '+1 (555) 345-6789',
+  },
+  {
+    id: '4',
+    admissionNo: 'ADM004',
+    name: 'Diana Wilson',
+    class: 'Grade 6',
+    section: 'A',
+    rollNo: '001',
+    attendance: 78,
+    status: 'active',
+    guardian: 'Linda Wilson',
+    phone: '+1 (555) 456-7890',
+  },
+  {
+    id: '5',
+    admissionNo: 'ADM005',
+    name: 'Edward Davis',
+    class: 'Grade 6',
+    section: 'B',
+    rollNo: '002',
+    attendance: 89,
+    status: 'inactive',
+    guardian: 'Patricia Davis',
+    phone: '+1 (555) 567-8901',
+  },
+];
+
+const statusColors = {
+  active: 'bg-success text-success-foreground',
+  inactive: 'bg-warning text-warning-foreground',
+  transferred: 'bg-destructive text-destructive-foreground',
+};
+
+export function StudentTable() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [students] = useState<Student[]>(mockStudents);
+
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.admissionNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.class.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getAttendanceColor = (attendance: number) => {
+    if (attendance >= 90) return 'text-success';
+    if (attendance >= 75) return 'text-warning';
+    return 'text-destructive';
+  };
+
+  return (
+    <Card className="bg-gradient-card border-0 shadow-md">
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <CardTitle className="text-xl font-semibold">Student Management</CardTitle>
+          <div className="flex gap-2">
+            <div className="relative flex-1 sm:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="icon">
+              <Filter className="w-4 h-4" />
+            </Button>
+            <Button className="bg-gradient-primary hover:opacity-90">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Student
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border bg-background">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-semibold">Student</TableHead>
+                <TableHead className="font-semibold">Admission No.</TableHead>
+                <TableHead className="font-semibold">Class</TableHead>
+                <TableHead className="font-semibold">Roll No.</TableHead>
+                <TableHead className="font-semibold">Attendance</TableHead>
+                <TableHead className="font-semibold">Guardian</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredStudents.map((student) => (
+                <TableRow key={student.id} className="hover:bg-accent/50">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={student.avatar} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          {student.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-sm text-muted-foreground">{student.phone}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{student.admissionNo}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{student.class}</div>
+                      <div className="text-sm text-muted-foreground">Section {student.section}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{student.rollNo}</TableCell>
+                  <TableCell>
+                    <span className={`font-medium ${getAttendanceColor(student.attendance)}`}>
+                      {student.attendance}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">{student.guardian}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={statusColors[student.status]}>
+                      {student.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Student
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
