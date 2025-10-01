@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, Search, Mail, Phone, Eye, Edit, Layers, Slash, Download } from "lucide-react";
+import { MoreHorizontal, Search, Mail, Phone, Eye, Edit, Layers, Slash, Download, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -24,8 +23,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TeacherForm } from "@/components/admin/forms/TeacherForm";
+import { TeacherIdCard } from "@/components/admin/teachers/TeacherIdCard";
 
 interface Teacher {
   id: number;
@@ -84,7 +84,6 @@ const initialTeachers: Teacher[] = [
 export function TeachersTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [teachersState, setTeachersState] = useState<Teacher[]>(initialTeachers);
-  const navigate = useNavigate();
 
   // dialog & alert state
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
@@ -96,6 +95,10 @@ export function TeachersTable() {
 
   const [suspendingTeacher, setSuspendingTeacher] = useState<Teacher | null>(null);
   const [isSuspendOpen, setIsSuspendOpen] = useState(false);
+  const [viewingTeacher, setViewingTeacher] = useState<Teacher | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewingIdTeacher, setViewingIdTeacher] = useState<Teacher | null>(null);
+  const [isIdOpen, setIsIdOpen] = useState(false);
 
   const filtered = teachersState.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,7 +107,13 @@ export function TeachersTable() {
   );
 
   const handleView = (teacher: Teacher) => {
-    navigate(`/admin/teachers/${teacher.id}`);
+    setViewingTeacher(teacher);
+    setIsViewOpen(true);
+  };
+
+  const handleCreateId = (teacher: Teacher) => {
+    setViewingIdTeacher(teacher);
+    setIsIdOpen(true);
   };
 
   const handleEdit = (teacher: Teacher) => {
@@ -208,6 +217,21 @@ export function TeachersTable() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input placeholder="Search teachers..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         </div>
+        <div className="ml-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">Create ID</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Teacher ID</DialogTitle>
+              </DialogHeader>
+              <div className="pt-4">
+                <TeacherIdCard {...teachersState[0]} />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -281,6 +305,10 @@ export function TeachersTable() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCreateId(teacher)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create ID
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(teacher)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Profile
@@ -348,6 +376,58 @@ export function TeachersTable() {
               <Button onClick={handleAssignSubmit}>Save</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Teacher Details</DialogTitle>
+          </DialogHeader>
+          {viewingTeacher && (
+            <TeacherForm
+              initialData={{
+                firstName: viewingTeacher.name.split(' ')[0] ?? '',
+                lastName: viewingTeacher.name.split(' ').slice(1).join(' ') ?? '',
+                employeeId: String(viewingTeacher.id),
+                email: viewingTeacher.email,
+                phone: viewingTeacher.phone,
+                dateOfBirth: '',
+                gender: 'male',
+                qualification: '',
+                specialization: viewingTeacher.subject,
+                joiningDate: '',
+                designation: '',
+                department: '',
+                address: '',
+                emergencyContact: '',
+              }}
+              onSubmit={() => {}}
+              onCancel={() => { setIsViewOpen(false); setViewingTeacher(null); }}
+              readOnly
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ID Dialog (per-row) */}
+      <Dialog open={isIdOpen} onOpenChange={setIsIdOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Teacher ID</DialogTitle>
+          </DialogHeader>
+          {viewingIdTeacher && (
+            <div>
+              <div className="mb-4">
+                <TeacherIdCard {...viewingIdTeacher} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => window.print()}>Download / Print</Button>
+                <Button onClick={() => { setIsIdOpen(false); setViewingIdTeacher(null); }}>Close</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

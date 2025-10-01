@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { StudentIdCard } from "@/components/admin/students/StudentIdCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -133,6 +135,11 @@ export function StudentTable() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewingStudentId, setViewingStudentId] = useState<Student | null>(null);
+  const [isIdOpen, setIsIdOpen] = useState(false);
+  const idRef = useRef<HTMLDivElement | null>(null);
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -141,8 +148,14 @@ export function StudentTable() {
   );
 
   const handleView = (student: Student) => {
-    // navigate to a details page (assumes route exists)
-    navigate(`/admin/students/${student.id}`);
+    // open detail dialog
+    setViewingStudent(student);
+    setIsViewOpen(true);
+  };
+
+  const handleCreateId = (student: Student) => {
+    setViewingStudentId(student);
+    setIsIdOpen(true);
   };
 
   const handleEdit = (student: Student) => {
@@ -259,6 +272,20 @@ export function StudentTable() {
               <Plus className="w-4 h-4 mr-2" />
               Add Student
             </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">Create ID</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Student ID</DialogTitle>
+                </DialogHeader>
+                {/* For demo: create ID for first selected/first student */}
+                <div className="pt-4">
+                  <StudentIdCard {...students[0]} />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </CardHeader>
@@ -331,6 +358,10 @@ export function StudentTable() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCreateId(student)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create ID
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(student)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Student
@@ -379,6 +410,56 @@ export function StudentTable() {
         </DialogContent>
       </Dialog>
 
+      {/* View Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Student Details</DialogTitle>
+          </DialogHeader>
+          {viewingStudent && (
+            <StudentForm
+              initialData={{
+                firstName: viewingStudent.name.split(' ')[0] ?? '',
+                lastName: viewingStudent.name.split(' ').slice(1).join(' ') ?? '',
+                admissionNo: viewingStudent.admissionNo,
+                email: '',
+                dateOfBirth: '',
+                gender: 'male',
+                bloodGroup: '',
+                class: viewingStudent.class,
+                section: viewingStudent.section,
+                parentName: viewingStudent.guardian,
+                parentEmail: '',
+                parentPhone: viewingStudent.phone,
+                address: '',
+              }}
+              onSubmit={() => {}}
+              onCancel={() => { setIsViewOpen(false); setViewingStudent(null); }}
+              readOnly
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ID Dialog (per-row) */}
+      <Dialog open={isIdOpen} onOpenChange={setIsIdOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Student ID</DialogTitle>
+          </DialogHeader>
+          {viewingStudentId && (
+            <div>
+              <div className="mb-4">
+                <StudentIdCard {...viewingStudentId} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => window.print()}>Download / Print</Button>
+                <Button onClick={() => { setIsIdOpen(false); setViewingStudentId(null); }}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Delete Alert */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>

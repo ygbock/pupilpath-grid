@@ -47,9 +47,10 @@ interface TeacherFormProps {
   initialData?: Partial<TeacherFormValues>;
   onSubmit: (data: TeacherFormValues) => void;
   onCancel?: () => void;
+  readOnly?: boolean;
 }
 
-export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProps) {
+export function TeacherForm({ initialData, onSubmit, onCancel, readOnly }: TeacherFormProps) {
   const [profileImage, setProfileImage] = useState<string>("");
   
   const form = useForm<TeacherFormValues>({
@@ -73,6 +74,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -100,21 +102,23 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-center gap-2">
-            <label htmlFor="profile-upload" className="cursor-pointer">
-              <Button type="button" variant="outline" size="sm" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Photo
-                </span>
-              </Button>
-              <input
-                id="profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
+            {!readOnly && (
+              <label htmlFor="profile-upload" className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Photo
+                  </span>
+                </Button>
+                <input
+                  id="profile-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
             <p className="text-xs text-muted-foreground">
               Recommended: 500x500px, max 2MB
             </p>
@@ -129,7 +133,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jane" {...field} />
+                  <Input placeholder="Jane" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,7 +147,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Smith" {...field} />
+                  <Input placeholder="Smith" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,7 +163,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Employee ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="EMP001" {...field} />
+                  <Input placeholder="EMP001" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -173,7 +177,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="teacher@school.com" {...field} />
+                  <Input type="email" placeholder="teacher@school.com" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -189,7 +193,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="+1234567890" {...field} />
+                  <Input placeholder="+1234567890" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -203,7 +207,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -218,7 +222,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
                 <FormLabel>Gender</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                   </FormControl>
@@ -242,7 +246,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Qualification</FormLabel>
                 <FormControl>
-                  <Input placeholder="M.Sc. in Physics" {...field} />
+                  <Input placeholder="M.Sc. in Physics" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -256,7 +260,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Specialization</FormLabel>
                 <FormControl>
-                  <Input placeholder="Physics" {...field} />
+                  <Input placeholder="Physics" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -272,7 +276,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
               <FormItem>
                 <FormLabel>Joining Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -287,7 +291,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
                 <FormLabel>Designation</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select designation" />
                     </SelectTrigger>
                   </FormControl>
@@ -313,7 +317,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
                 <FormLabel>Department</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                   </FormControl>
@@ -338,7 +342,7 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter full address" {...field} />
+                <Textarea placeholder="Enter full address" {...field} disabled={readOnly} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -360,14 +364,24 @@ export function TeacherForm({ initialData, onSubmit, onCancel }: TeacherFormProp
         />
 
         <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+          {readOnly ? (
+            onCancel && (
+              <Button type="button" onClick={onCancel}>
+                Close
+              </Button>
+            )
+          ) : (
+            <>
+              {onCancel && (
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit">
+                {initialData ? "Update Teacher" : "Add Teacher"}
+              </Button>
+            </>
           )}
-          <Button type="submit">
-            {initialData ? "Update Teacher" : "Add Teacher"}
-          </Button>
         </div>
       </form>
     </Form>

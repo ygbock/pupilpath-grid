@@ -46,9 +46,10 @@ interface StudentFormProps {
   initialData?: Partial<StudentFormValues>;
   onSubmit: (data: StudentFormValues) => void;
   onCancel?: () => void;
+  readOnly?: boolean;
 }
 
-export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProps) {
+export function StudentForm({ initialData, onSubmit, onCancel, readOnly }: StudentFormProps) {
   const [profileImage, setProfileImage] = useState<string>("");
   
   const form = useForm<StudentFormValues>({
@@ -71,6 +72,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -98,21 +100,23 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-center gap-2">
-            <label htmlFor="profile-upload" className="cursor-pointer">
-              <Button type="button" variant="outline" size="sm" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Photo
-                </span>
-              </Button>
-              <input
-                id="profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
+            {!readOnly && (
+              <label htmlFor="profile-upload" className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Photo
+                  </span>
+                </Button>
+                <input
+                  id="profile-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
             <p className="text-xs text-muted-foreground">
               Recommended: 500x500px, max 2MB
             </p>
@@ -127,7 +131,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" {...field} />
+                  <Input placeholder="John" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -141,7 +145,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Doe" {...field} />
+                  <Input placeholder="Doe" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +161,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>Admission Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="STU001" {...field} />
+                  <Input placeholder="STU001" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -171,7 +175,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="student@email.com" {...field} />
+                  <Input type="email" placeholder="student@email.com" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,7 +191,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -202,7 +206,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
                 <FormLabel>Gender</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                   </FormControl>
@@ -224,7 +228,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
               <FormItem>
                 <FormLabel>Blood Group</FormLabel>
                 <FormControl>
-                  <Input placeholder="A+" {...field} />
+                  <Input placeholder="A+" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -239,9 +243,9 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Class</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select class" />
                     </SelectTrigger>
                   </FormControl>
@@ -263,9 +267,9 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Section</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!!readOnly}>
                       <SelectValue placeholder="Select section" />
                     </SelectTrigger>
                   </FormControl>
@@ -292,7 +296,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
                 <FormItem>
                   <FormLabel>Parent/Guardian Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Parent name" {...field} />
+                    <Input placeholder="Parent name" {...field} disabled={readOnly} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -307,7 +311,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
                   <FormItem>
                     <FormLabel>Parent Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="parent@email.com" {...field} />
+                      <Input type="email" placeholder="parent@email.com" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -321,7 +325,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
                   <FormItem>
                     <FormLabel>Parent Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="+1234567890" {...field} />
+                      <Input placeholder="+1234567890" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -338,7 +342,7 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter full address" {...field} />
+                <Textarea placeholder="Enter full address" {...field} disabled={readOnly} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -346,14 +350,24 @@ export function StudentForm({ initialData, onSubmit, onCancel }: StudentFormProp
         />
 
         <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+          {readOnly ? (
+            onCancel && (
+              <Button type="button" onClick={onCancel}>
+                Close
+              </Button>
+            )
+          ) : (
+            <>
+              {onCancel && (
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit">
+                {initialData ? "Update Student" : "Add Student"}
+              </Button>
+            </>
           )}
-          <Button type="submit">
-            {initialData ? "Update Student" : "Add Student"}
-          </Button>
         </div>
       </form>
     </Form>
