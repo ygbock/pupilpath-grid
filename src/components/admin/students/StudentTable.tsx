@@ -37,7 +37,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { StudentForm } from "@/components/admin/forms/StudentForm";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus } from "lucide-react";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus, Download } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Student {
   id: string;
@@ -159,6 +160,7 @@ export function StudentTable() {
     setStudents(prev => prev.filter(s => s.id !== deletingStudent.id));
     setIsDeleteOpen(false);
     setDeletingStudent(null);
+    toast({ title: "Student deleted", description: `Deleted ${deletingStudent.name}` });
   };
 
   const handleUpdateStudent = (data: any) => {
@@ -175,6 +177,58 @@ export function StudentTable() {
     setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
     setIsEditOpen(false);
     setEditingStudent(null);
+    toast({ title: "Student updated", description: `Updated ${updated.name}` });
+  };
+
+  const exportStudents = (items: Student[]) => {
+    if (!items || items.length === 0) {
+      toast({ title: "No students to export" });
+      return;
+    }
+
+    const headers = [
+      'id', 'admissionNo', 'name', 'class', 'section', 'rollNo', 'attendance', 'status', 'guardian', 'phone'
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    for (const s of items) {
+      const row = [
+        s.id,
+        escapeCsv(s.admissionNo),
+        escapeCsv(s.name),
+        escapeCsv(s.class),
+        escapeCsv(s.section),
+        escapeCsv(s.rollNo),
+        String(s.attendance),
+        escapeCsv(s.status),
+        escapeCsv(s.guardian),
+        escapeCsv(s.phone),
+      ];
+      csvRows.push(row.join(','));
+    }
+
+    const csv = csvRows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `students_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    toast({ title: 'Exported students', description: `Exported ${items.length} students` });
+  };
+
+  const escapeCsv = (v: any) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
   };
 
   const getAttendanceColor = (attendance: number) => {
@@ -269,6 +323,10 @@ export function StudentTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => exportStudents(filteredStudents)}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Export CSV
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleView(student)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details

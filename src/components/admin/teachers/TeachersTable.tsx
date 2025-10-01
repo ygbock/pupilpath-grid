@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, Search, Mail, Phone, Eye, Edit, Layers, Slash } from "lucide-react";
+import { MoreHorizontal, Search, Mail, Phone, Eye, Edit, Layers, Slash, Download } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,6 +128,17 @@ export function TeachersTable() {
     setTeachersState(prev => prev.map(t => t.id === suspendingTeacher.id ? { ...t, status: 'Suspended' } : t));
     setIsSuspendOpen(false);
     setSuspendingTeacher(null);
+    toast({ title: 'Teacher suspended', description: `Suspended ${suspendingTeacher.name}` });
+  };
+
+  const handleAssignSubmit = () => {
+    if (!assigningTeacher) return;
+    const classes = assignInput.split(',').map(s => s.trim()).filter(Boolean);
+    setTeachersState(prev => prev.map(t => t.id === assigningTeacher.id ? { ...t, classes } : t));
+    setIsAssignOpen(false);
+    setAssigningTeacher(null);
+    setAssignInput("");
+    toast({ title: 'Classes assigned', description: `Assigned ${classes.length} classes to ${assigningTeacher.name}` });
   };
 
   const handleUpdateTeacher = (data: any) => {
@@ -141,15 +153,52 @@ export function TeachersTable() {
     setTeachersState(prev => prev.map(t => t.id === updated.id ? updated : t));
     setIsEditOpen(false);
     setEditingTeacher(null);
+    toast({ title: 'Teacher updated', description: `Updated ${updated.name}` });
   };
 
-  const handleAssignSubmit = () => {
-    if (!assigningTeacher) return;
-    const classes = assignInput.split(',').map(s => s.trim()).filter(Boolean);
-    setTeachersState(prev => prev.map(t => t.id === assigningTeacher.id ? { ...t, classes } : t));
-    setIsAssignOpen(false);
-    setAssigningTeacher(null);
-    setAssignInput("");
+  const exportTeachers = (items: Teacher[]) => {
+    if (!items || items.length === 0) {
+      toast({ title: "No teachers to export" });
+      return;
+    }
+
+    const headers = ['id', 'name', 'email', 'phone', 'subject', 'classes', 'experience', 'status'];
+    const rows = [headers.join(',')];
+    for (const t of items) {
+      const row = [
+        t.id,
+        escapeCsv(t.name),
+        escapeCsv(t.email),
+        escapeCsv(t.phone),
+        escapeCsv(t.subject),
+        escapeCsv(t.classes.join('; ')),
+        escapeCsv(t.experience),
+        escapeCsv(t.status),
+      ];
+      rows.push(row.join(','));
+    }
+
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `teachers_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    toast({ title: 'Exported teachers', description: `Exported ${items.length} teachers` });
+  };
+
+  const escapeCsv = (v: any) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
   };
 
   return (
@@ -224,6 +273,10 @@ export function TeachersTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => exportTeachers(filtered)}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Export CSV
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleView(teacher)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
