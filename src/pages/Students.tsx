@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentTable } from "@/components/students/StudentTable";
+import { StudentForm } from "@/components/forms/StudentForm";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Plus, Users } from "lucide-react";
 
 const Students = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleSubmit = (data: any) => {
+    console.log("Student data:", data);
+    setIsDialogOpen(false);
+  };
+
   return (
     <DashboardLayout userRole="admin">
       <div className="space-y-6">
@@ -20,7 +35,10 @@ const Students = () => {
                 </p>
               </div>
             </div>
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setIsDialogOpen(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Enroll Student
             </Button>
@@ -28,6 +46,18 @@ const Students = () => {
         </div>
         
         <StudentTable />
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Enroll New Student</DialogTitle>
+            </DialogHeader>
+            <StudentForm 
+              onSubmit={handleSubmit} 
+              onCancel={() => setIsDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

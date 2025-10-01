@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AssessmentsManager } from "@/components/assessments/AssessmentsManager";
+import { AssignmentForm } from "@/components/forms/AssignmentForm";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Plus, ClipboardList } from "lucide-react";
 
 const Assessments = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleSubmit = (data: any) => {
+    console.log("Assignment data:", data);
+    setIsDialogOpen(false);
+  };
+
   return (
     <DashboardLayout userRole="admin">
       <div className="space-y-6">
@@ -20,7 +35,10 @@ const Assessments = () => {
                 </p>
               </div>
             </div>
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setIsDialogOpen(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Assessment
             </Button>
@@ -28,6 +46,18 @@ const Assessments = () => {
         </div>
         
         <AssessmentsManager />
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Assessment</DialogTitle>
+            </DialogHeader>
+            <AssignmentForm 
+              onSubmit={handleSubmit} 
+              onCancel={() => setIsDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
