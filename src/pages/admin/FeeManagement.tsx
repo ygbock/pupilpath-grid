@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { FeesOverview } from "@/components/fees/FeesOverview";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { FeesOverview } from "@/components/admin/fees/FeesOverview";
 import { CreditCard } from "lucide-react";
 
 const FeeManagement = () => {

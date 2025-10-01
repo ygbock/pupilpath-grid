@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { AssessmentsManager } from "@/components/assessments/AssessmentsManager";
-import { AssignmentForm } from "@/components/forms/AssignmentForm";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { TimetableManager } from "@/components/admin/timetable/TimetableManager";
+import { TimetableForm } from "@/components/admin/forms/TimetableForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,13 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, ClipboardList } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
 
-const Assessments = () => {
+const Timetable = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSubmit = (data: any) => {
-    console.log("Assignment data:", data);
+    console.log("Timetable data:", data);
     setIsDialogOpen(false);
   };
 
@@ -25,34 +25,34 @@ const Assessments = () => {
         <div className="bg-gradient-subtle rounded-2xl p-8 border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-warning" />
+              <div className="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-info" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Assessments</h1>
+                <h1 className="text-3xl font-bold text-foreground">Timetable</h1>
                 <p className="text-muted-foreground">
-                  Create and manage exams, tests, and evaluations
+                  Manage class schedules and teacher assignments
                 </p>
               </div>
             </div>
             <Button 
-              className="bg-primary hover:bg-primary/90"
+              className="bg-info hover:bg-info/90"
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Assessment
+              Add Period
             </Button>
           </div>
         </div>
         
-        <AssessmentsManager />
+        <TimetableManager />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create Assessment</DialogTitle>
+              <DialogTitle>Add Timetable Entry</DialogTitle>
             </DialogHeader>
-            <AssignmentForm 
+            <TimetableForm 
               onSubmit={handleSubmit} 
               onCancel={() => setIsDialogOpen(false)}
             />
@@ -63,4 +63,4 @@ const Assessments = () => {
   );
 };
 
-export default Assessments;
+export default Timetable;

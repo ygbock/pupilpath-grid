@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { AttendanceTracker } from "@/components/attendance/AttendanceTracker";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { AttendanceTracker } from "@/components/admin/attendance/AttendanceTracker";
 import { UserCheck } from "lucide-react";
 
 const Attendance = () => {

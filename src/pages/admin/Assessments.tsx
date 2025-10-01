@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ReportsHub } from "@/components/reports/ReportsHub";
-import { ReportGenerationForm } from "@/components/forms/ReportGenerationForm";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { AssessmentsManager } from "@/components/admin/assessments/AssessmentsManager";
+import { AssignmentForm } from "@/components/admin/forms/AssignmentForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,13 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileText, Plus } from "lucide-react";
+import { Plus, ClipboardList } from "lucide-react";
 
-const Reports = () => {
+const Assessments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSubmit = (data: any) => {
-    console.log("Report data:", data);
+    console.log("Assignment data:", data);
     setIsDialogOpen(false);
   };
 
@@ -25,13 +25,13 @@ const Reports = () => {
         <div className="bg-gradient-subtle rounded-2xl p-8 border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-secondary" />
+              <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                <ClipboardList className="w-6 h-6 text-warning" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Reports</h1>
+                <h1 className="text-3xl font-bold text-foreground">Assessments</h1>
                 <p className="text-muted-foreground">
-                  Generate and export comprehensive school reports
+                  Create and manage exams, tests, and evaluations
                 </p>
               </div>
             </div>
@@ -40,19 +40,19 @@ const Reports = () => {
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Generate Report
+              Create Assessment
             </Button>
           </div>
         </div>
         
-        <ReportsHub />
+        <AssessmentsManager />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Generate New Report</DialogTitle>
+              <DialogTitle>Create Assessment</DialogTitle>
             </DialogHeader>
-            <ReportGenerationForm 
+            <AssignmentForm 
               onSubmit={handleSubmit} 
               onCancel={() => setIsDialogOpen(false)}
             />
@@ -63,4 +63,4 @@ const Reports = () => {
   );
 };
 
-export default Reports;
+export default Assessments;

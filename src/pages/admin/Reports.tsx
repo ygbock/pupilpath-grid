@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { GradebookView } from "@/components/gradebook/GradebookView";
-import { GradeEntryForm } from "@/components/forms/GradeEntryForm";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { ReportsHub } from "@/components/admin/reports/ReportsHub";
+import { ReportGenerationForm } from "@/components/admin/forms/ReportGenerationForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,13 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BookOpen, Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 
-const Gradebook = () => {
+const Reports = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSubmit = (data: any) => {
-    console.log("Grade data:", data);
+    console.log("Report data:", data);
     setIsDialogOpen(false);
   };
 
@@ -25,34 +25,34 @@ const Gradebook = () => {
         <div className="bg-gradient-subtle rounded-2xl p-8 border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-success" />
+              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-secondary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Gradebook</h1>
+                <h1 className="text-3xl font-bold text-foreground">Reports</h1>
                 <p className="text-muted-foreground">
-                  Monitor student performance and manage grades across all subjects
+                  Generate and export comprehensive school reports
                 </p>
               </div>
             </div>
             <Button 
-              className="bg-success hover:bg-success/90"
+              className="bg-primary hover:bg-primary/90"
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Enter Grade
+              Generate Report
             </Button>
           </div>
         </div>
         
-        <GradebookView />
+        <ReportsHub />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Enter Grade</DialogTitle>
+              <DialogTitle>Generate New Report</DialogTitle>
             </DialogHeader>
-            <GradeEntryForm 
+            <ReportGenerationForm 
               onSubmit={handleSubmit} 
               onCancel={() => setIsDialogOpen(false)}
             />
@@ -63,4 +63,4 @@ const Gradebook = () => {
   );
 };
 
-export default Gradebook;
+export default Reports;

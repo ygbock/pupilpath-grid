@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { SettingsPanel } from "@/components/admin/settings/SettingsPanel";
 import { Settings as SettingsIcon } from "lucide-react";
 
 const Settings = () => {

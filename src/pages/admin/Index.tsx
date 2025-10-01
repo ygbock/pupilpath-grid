@@ -1,8 +1,8 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { StatsCards } from "@/components/dashboard/StatsCards";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { StudentTable } from "@/components/students/StudentTable";
-import { AttendanceTracker } from "@/components/attendance/AttendanceTracker";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { StatsCards } from "@/components/admin/dashboard/StatsCards";
+import { RecentActivity } from "@/components/admin/dashboard/RecentActivity";
+import { StudentTable } from "@/components/admin/students/StudentTable";
+import { AttendanceTracker } from "@/components/admin/attendance/AttendanceTracker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {

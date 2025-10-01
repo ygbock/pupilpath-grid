@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ClassesGrid } from "@/components/classes/ClassesGrid";
-import { ClassForm } from "@/components/forms/ClassForm";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { ClassesGrid } from "@/components/admin/classes/ClassesGrid";
+import { ClassForm } from "@/components/admin/forms/ClassForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

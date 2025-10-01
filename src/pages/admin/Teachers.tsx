@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { TeachersTable } from "@/components/teachers/TeachersTable";
-import { TeacherForm } from "@/components/forms/TeacherForm";
+import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
+import { TeachersTable } from "@/components/admin/teachers/TeachersTable";
+import { TeacherForm } from "@/components/admin/forms/TeacherForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
