@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -18,6 +19,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { StudentForm } from "@/components/admin/forms/StudentForm";
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Plus } from "lucide-react";
 
 interface Student {
@@ -105,13 +124,58 @@ const statusColors = {
 
 export function StudentTable() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [students] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const navigate = useNavigate();
+
+  // dialog & alert state
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.admissionNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.class.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleView = (student: Student) => {
+    // navigate to a details page (assumes route exists)
+    navigate(`/admin/students/${student.id}`);
+  };
+
+  const handleEdit = (student: Student) => {
+    setEditingStudent(student);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (student: Student) => {
+    setDeletingStudent(student);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!deletingStudent) return;
+    setStudents(prev => prev.filter(s => s.id !== deletingStudent.id));
+    setIsDeleteOpen(false);
+    setDeletingStudent(null);
+  };
+
+  const handleUpdateStudent = (data: any) => {
+    if (!editingStudent) return;
+    // For demo, merge fields into the name/admission/class/guardian/phone where applicable
+    const updated = {
+      ...editingStudent,
+      name: `${data.firstName} ${data.lastName}`,
+      admissionNo: data.admissionNo ?? editingStudent.admissionNo,
+      class: data.class ?? editingStudent.class,
+      guardian: data.parentName ?? editingStudent.guardian,
+      phone: data.parentPhone ?? editingStudent.phone,
+    } as Student;
+    setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+    setIsEditOpen(false);
+    setEditingStudent(null);
+  };
 
   const getAttendanceColor = (attendance: number) => {
     if (attendance >= 90) return 'text-success';
@@ -205,15 +269,15 @@ export function StudentTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleView(student)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(student)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Student
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(student)}>
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -226,6 +290,52 @@ export function StudentTable() {
           </Table>
         </div>
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Student</DialogTitle>
+          </DialogHeader>
+          {editingStudent && (
+            <StudentForm
+              initialData={{
+                firstName: editingStudent.name.split(' ')[0] ?? '',
+                lastName: editingStudent.name.split(' ').slice(1).join(' ') ?? '',
+                admissionNo: editingStudent.admissionNo,
+                email: '',
+                dateOfBirth: '',
+                gender: 'male',
+                bloodGroup: '',
+                class: editingStudent.class,
+                section: editingStudent.section,
+                parentName: editingStudent.guardian,
+                parentEmail: '',
+                parentPhone: editingStudent.phone,
+                address: '',
+              }}
+              onSubmit={handleUpdateStudent}
+              onCancel={() => { setIsEditOpen(false); setEditingStudent(null); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Alert */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete student</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete {deletingStudent?.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive" onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
