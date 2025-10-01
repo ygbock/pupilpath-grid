@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const parentFormSchema = z.object({
@@ -42,6 +45,8 @@ interface ParentFormProps {
 }
 
 export function ParentForm({ initialData, onSubmit, onCancel }: ParentFormProps) {
+  const [profileImage, setProfileImage] = useState<string>("");
+  
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
     defaultValues: initialData || {
@@ -57,6 +62,18 @@ export function ParentForm({ initialData, onSubmit, onCancel }: ParentFormProps)
     },
   });
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      toast.success("Profile photo selected");
+    }
+  };
+
   const handleSubmit = (data: ParentFormValues) => {
     onSubmit(data);
     toast.success(initialData ? "Parent updated successfully" : "Parent added successfully");
@@ -65,6 +82,35 @@ export function ParentForm({ initialData, onSubmit, onCancel }: ParentFormProps)
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="flex flex-col items-center gap-4 pb-6 border-b">
+          <Avatar className="w-24 h-24">
+            <AvatarImage src={profileImage} />
+            <AvatarFallback className="bg-primary/10">
+              <Upload className="w-8 h-8 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col items-center gap-2">
+            <label htmlFor="profile-upload" className="cursor-pointer">
+              <Button type="button" variant="outline" size="sm" asChild>
+                <span>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Photo
+                </span>
+              </Button>
+              <input
+                id="profile-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Recommended: 500x500px, max 2MB
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
