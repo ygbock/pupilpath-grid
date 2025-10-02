@@ -85,6 +85,16 @@ export function ClassesGrid() {
   const navigate = useNavigate();
   const [items, setItems] = useState(() => classes);
   const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [classStudents, setClassStudents] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [sortField, setSortField] = useState<'name'|'roll'|'attendance'>('roll');
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [profileStudent, setProfileStudent] = useState<any | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -96,9 +106,42 @@ export function ClassesGrid() {
   // prefer a global toast if provided on window, otherwise use the imported default
   const toast = (window as any).__TOAST__?.toast ?? defaultToast;
 
-  function handleViewDetails(cls: any) {
+  async function handleViewDetails(cls: any) {
     setSelectedClass(cls);
-    setIsViewOpen(true);
+    setLoadingStudents(true);
+    setStudentsError(null);
+    setPage(1);
+    try {
+      const res = await fetch(`/api/classes/${cls.id}/students`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      // normalize shape and add `present` flag for attendance-taking
+      const students = data.map((s: any, idx: number) => ({
+        id: s.id ?? `${cls.id}-${idx+1}`,
+        name: s.name ?? ((`${s.firstName || 'Student'} ${s.lastName || ''}`).trim() || `Student ${idx+1}`),
+        roll: s.roll ?? s.rollNumber ?? (idx+1),
+        attendance: typeof s.attendance === 'number' ? s.attendance : Math.floor(80 + Math.random() * 20),
+        performance: s.performance ?? s.grade ?? ['A','B','C','D'][Math.floor(Math.random()*4)],
+        present: false,
+      }));
+      setClassStudents(students);
+    } catch (err) {
+      // fallback to mock data if API fails
+      console.warn('Failed to fetch students, using mock', err);
+      const mock = Array.from({ length: cls.students || 10 }).map((_, idx) => ({
+        id: `${cls.id}-${idx+1}`,
+        name: `Student ${idx + 1}`,
+        roll: idx + 1,
+        attendance: Math.floor(80 + Math.random() * 20),
+        performance: ['A','B','C','D'][Math.floor(Math.random()*4)],
+        present: false,
+      }));
+      setClassStudents(mock);
+      setStudentsError('Unable to load live data — showing mock students');
+    } finally {
+      setLoadingStudents(false);
+      setIsViewOpen(true);
+    }
   }
 
   function handleEditClass(cls: any) {
@@ -132,8 +175,7 @@ export function ClassesGrid() {
   };
 
   function handleViewStudentsButton(cls: any) {
-    setSelectedClass(cls);
-    setIsViewOpen(true);
+    handleViewDetails(cls);
   }
 
   function handleManageButton(cls: any) {
@@ -283,18 +325,119 @@ export function ClassesGrid() {
 
       {/* View Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent>
+        <DialogContent className="w-full sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Class Details</DialogTitle>
           </DialogHeader>
           {selectedClass && (
-            <div className="space-y-3">
-              <div className="text-lg font-semibold">{selectedClass.name}</div>
-              <div className="text-sm text-muted-foreground">Level: {selectedClass.level}</div>
-              <div className="text-sm">Teacher: {selectedClass.teacher}</div>
-              <div className="text-sm">Students: {selectedClass.students}</div>
-              <div className="text-sm">Subjects: {selectedClass.subjects}</div>
-              <div className="text-sm">Room: {selectedClass.room}</div>
+            <div className="space-y-4 px-4 py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <div className="text-xl font-semibold">{selectedClass.name}</div>
+                  <div className="text-base text-muted-foreground">Level: {selectedClass.level}</div>
+                  <div className="text-base">Teacher: {selectedClass.teacher}</div>
+                </div>
+                <div className="flex items-center justify-end gap-6">
+                  <div className="text-base text-muted-foreground">
+                    <div className="font-medium text-foreground">{selectedClass.students}</div>
+                    <div className="text-base">Students</div>
+                  </div>
+                  <div className="text-base text-muted-foreground">
+                    <div className="font-medium text-foreground">{selectedClass.subjects}</div>
+                    <div className="text-base">Subjects</div>
+                  </div>
+                  <div className="text-base text-muted-foreground">
+                    <div className="font-medium text-foreground">{selectedClass.room}</div>
+                    {/* <div className="text-base">Room</div> */}
+                  </div>
+                </div>
+              </div>
+
+              {/* controls (search / sort / page size) */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <input placeholder="Search name or roll" value={filterText} onChange={(e) => { setFilterText(e.target.value); setPage(1); }} className="input px-3 py-2 h-9" />
+                  <select value={sortField} onChange={(e) => setSortField(e.target.value as any)} className="input px-3 py-2 h-9">
+                    <option value="roll">Roll</option>
+                    <option value="name">Name</option>
+                    <option value="attendance">Attendance</option>
+                  </select>
+                  <select value={sortDir} onChange={(e) => setSortDir(e.target.value as any)} className="input px-4 py-2 h-9">
+                    <option value="asc">Asc</option>
+                    <option value="desc">Desc</option>
+                  </select>
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} className="input px-3 py-2 h-9">
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                  </select>
+                </div>
+                <div className="text-sm text-muted-foreground">{classStudents.length} students</div>
+              </div>
+
+              {/* table scroll area */}
+              <div className="max-h-[48vh] overflow-auto border rounded">
+                <table className="w-full table-auto">
+                  <thead>
+                    <tr className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
+                      <th className="px-3 py-2 text-left text-sm text-muted-foreground">Name</th>
+                      <th className="px-3 py-2 text-sm text-muted-foreground">Roll</th>
+                      <th className="px-3 py-2 text-sm text-muted-foreground">Attendance</th>
+                      <th className="px-3 py-2 text-sm text-muted-foreground">Performance</th>
+                      <th className="px-3 py-2 text-sm text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      // filter
+                      const filtered = classStudents.filter(s => s.name.toLowerCase().includes(filterText.toLowerCase()) || String(s.roll).includes(filterText));
+                      // sort
+                      const sorted = filtered.sort((a,b) => {
+                        const dir = sortDir === 'asc' ? 1 : -1;
+                        if (sortField === 'name') return dir * a.name.localeCompare(b.name);
+                        if (sortField === 'attendance') return dir * (a.attendance - b.attendance);
+                        return dir * (a.roll - b.roll);
+                      });
+                      const start = (page-1)*pageSize;
+                      const pageItems = sorted.slice(start, start+pageSize);
+                      return pageItems.map((s) => (
+                        <tr key={s.id} className={`border-t even:bg-muted-foreground/5 hover:bg-muted-foreground/10`}>
+                          <td className="px-3 py-2 sm:px-2 sm:py-1 text-sm">{s.name}</td>
+                          <td className="px-3 py-2 sm:px-2 sm:py-1 text-sm">{s.roll}</td>
+                          <td className="px-3 py-2 sm:px-2 sm:py-1 text-sm">{s.attendance}%</td>
+                          <td className="px-3 py-2 sm:px-2 sm:py-1 text-sm">{s.performance}</td>
+                          <td className="px-3 py-2 sm:px-2 sm:py-1 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" variant={s.present ? 'secondary' : 'outline'} onClick={() => {
+                                setClassStudents(prev => prev.map(p => p.id === s.id ? { ...p, present: !p.present } : p));
+                              }}>{s.present ? 'Present' : 'Mark Present'}</Button>
+                              <Button size="sm" onClick={() => { setProfileStudent(s); setIsProfileOpen(true); }}>View Profile</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* pagination controls (fixed below table area) */}
+              {/* <div className="relative sm:sticky bottom-0 bg-background z-10 p-2 mt-2">
+                <div className="text-sm text-muted-foreground">Showing {(page-1)*pageSize+1} - {Math.min(page*pageSize, classStudents.length)} of {classStudents.length} students</div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>Prev</Button>
+                  <div className="text-sm">Page {page}</div>
+                  <Button size="sm" onClick={() => setPage(p => p+1)} disabled={(page*pageSize) >= classStudents.length}>Next</Button>
+                </div>
+              </div> */}
+              <div className="flex items-center justify-between mt-2">
+                      <div className="text-sm text-muted-foreground">Showing {(page-1)*pageSize+1} - {Math.min(page*pageSize, classStudents.length)} of {classStudents.length} students</div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>Prev</Button>
+                        <div className="text-sm">Page {page}</div>
+                        <Button size="sm" onClick={() => setPage(p => p+1)} disabled={(page*pageSize) >= classStudents.length}>Next</Button>
+                      </div>
+                    </div>
             </div>
           )}
         </DialogContent>
@@ -372,6 +515,66 @@ export function ClassesGrid() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Student Profile Dialog */}
+      <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+        <DialogContent className="w-full sm:max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Student Profile</DialogTitle>
+          </DialogHeader>
+          {profileStudent && (
+            <div className="space-y-4" id="student-profile">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-lg font-semibold">{profileStudent.name}</div>
+                  <div className="text-sm text-muted-foreground">Roll: {profileStudent.roll}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button onClick={() => {
+                    // print only the profile area
+                    const node = document.getElementById('student-profile');
+                    if (!node) return;
+                    const w = window.open('', '_blank');
+                    if (!w) return;
+                    w.document.write('<html><head><title>Student Profile</title>');
+                    w.document.write('<link rel="stylesheet" href="/assets/index-DxSo1j8U.css">');
+                    w.document.write('</head><body>');
+                    w.document.write(node.innerHTML);
+                    w.document.write('</body></html>');
+                    w.document.close();
+                    w.focus();
+                    setTimeout(() => { w.print(); w.close(); }, 300);
+                  }}>Print</Button>
+                  <Button variant="ghost" onClick={() => { setIsProfileOpen(false); setProfileStudent(null); }}>Close</Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Contact</div>
+                  <div className="text-sm">Email: {profileStudent.email ?? 'not set'}</div>
+                  <div className="text-sm">Phone: {profileStudent.phone ?? 'not set'}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Guardian</div>
+                  <div className="text-sm">Name: {profileStudent.guardian?.name ?? 'N/A'}</div>
+                  <div className="text-sm">Phone: {profileStudent.guardian?.phone ?? 'N/A'}</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium">Attendance History</div>
+                <div className="text-sm">Last 30 days: {profileStudent.attendance ?? 'N/A'}%</div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium">Performance</div>
+                <div className="text-sm">Current grade: {profileStudent.performance}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
