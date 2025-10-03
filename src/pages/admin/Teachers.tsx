@@ -10,12 +10,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { useTeachers } from "@/hooks/useTeachers";
 
 const Teachers = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { createTeacher } = useTeachers();
 
-  const handleSubmit = (data: any) => {
-    console.log("Teacher data:", data);
+  const handleSubmit = async (data: any) => {
+    await createTeacher.mutateAsync(data);
     setIsDialogOpen(false);
   };
 
