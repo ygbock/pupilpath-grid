@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Auth from "./pages/Auth";
 import Index from "./pages/admin/Index";
 import Students from "./pages/admin/Students";
 import Teachers from "./pages/admin/Teachers";
@@ -27,23 +29,26 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/teachers" element={<Teachers />} />
-          <Route path="/classes" element={<Classes />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/gradebook" element={<Gradebook />} />
-          <Route path="/assessments" element={<Assessments />} />
-          <Route path="/fees" element={<FeeManagement />} />
-          <Route path="/timetable" element={<Timetable />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/auth" element={<Auth />} />
+          
+          {/* Protected Routes */}
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+          <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
+          <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
+          <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
+          <Route path="/gradebook" element={<ProtectedRoute><Gradebook /></ProtectedRoute>} />
+          <Route path="/assessments" element={<ProtectedRoute><Assessments /></ProtectedRoute>} />
+          <Route path="/fees" element={<ProtectedRoute><FeeManagement /></ProtectedRoute>} />
+          <Route path="/timetable" element={<ProtectedRoute><Timetable /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           
           {/* Teacher Routes */}
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/teacher/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
           
           {/* Student Routes */}
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
