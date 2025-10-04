@@ -26,6 +26,10 @@ import TeacherTimetable from "./pages/teacher/Timetable";
 import TeacherStudents from "./pages/teacher/Students";
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentClasses from "./pages/student/Classes";
+import StudentGrades from "./pages/student/Grades";
+import StudentAttendance from "./pages/student/Attendance";
+import StudentTimetable from "./pages/student/Timetable";
+import StudentAssignments from "./pages/student/Assignments";
 
 const queryClient = new QueryClient();
 
@@ -61,8 +65,12 @@ const App = () => (
           <Route path="/teacher/students" element={<ProtectedRoute><TeacherStudents /></ProtectedRoute>} />
           
           {/* Student Routes */}
-          <Route path="/student/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
-          <Route path="/student/classes" element={<ProtectedRoute><StudentClasses /></ProtectedRoute>} />
+            <Route path="/student/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+            <Route path="/student/classes" element={<ProtectedRoute><StudentClasses /></ProtectedRoute>} />
+            <Route path="/student/grades" element={<ProtectedRoute><StudentGrades /></ProtectedRoute>} />
+            <Route path="/student/attendance" element={<ProtectedRoute><StudentAttendance /></ProtectedRoute>} />
+            <Route path="/student/timetable" element={<ProtectedRoute><StudentTimetable /></ProtectedRoute>} />
+            <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
