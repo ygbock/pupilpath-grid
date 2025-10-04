@@ -18,7 +18,14 @@ import Reports from "./pages/admin/Reports";
 import Settings from "./pages/admin/Settings";
 import NotFound from "./pages/admin/NotFound";
 import TeacherDashboard from "./pages/teacher/Dashboard";
+import TeacherClasses from "./pages/teacher/Classes";
+import TeacherAttendance from "./pages/teacher/Attendance";
+import TeacherGradebook from "./pages/teacher/Gradebook";
+import TeacherAssessments from "./pages/teacher/Assessments";
+import TeacherTimetable from "./pages/teacher/Timetable";
+import TeacherStudents from "./pages/teacher/Students";
 import StudentDashboard from "./pages/student/Dashboard";
+import StudentClasses from "./pages/student/Classes";
 
 const queryClient = new QueryClient();
 
@@ -46,9 +53,16 @@ const App = () => (
           
           {/* Teacher Routes */}
           <Route path="/teacher/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+          <Route path="/teacher/classes" element={<ProtectedRoute><TeacherClasses /></ProtectedRoute>} />
+          <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+          <Route path="/teacher/gradebook" element={<ProtectedRoute><TeacherGradebook /></ProtectedRoute>} />
+          <Route path="/teacher/assessments" element={<ProtectedRoute><TeacherAssessments /></ProtectedRoute>} />
+          <Route path="/teacher/timetable" element={<ProtectedRoute><TeacherTimetable /></ProtectedRoute>} />
+          <Route path="/teacher/students" element={<ProtectedRoute><TeacherStudents /></ProtectedRoute>} />
           
           {/* Student Routes */}
           <Route path="/student/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student/classes" element={<ProtectedRoute><StudentClasses /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
