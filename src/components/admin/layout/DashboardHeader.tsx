@@ -1,4 +1,4 @@
-import { Bell, Search, User, Settings, LogOut } from "lucide-react";
+import { Bell, Search, User, Settings, LogOut, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -16,11 +16,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { ChangePasswordDialog } from "@/components/account/ChangePasswordDialog";
+import { useHasRole } from "@/hooks/useRole";
 
 export function DashboardHeader() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showRotateBanner, setShowRotateBanner] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const { has: isAdmin } = useHasRole("admin");
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -30,11 +35,17 @@ export function DashboardHeader() {
           full_name: user.user_metadata?.full_name || "",
           email: user.email,
           profile_image_url: user.user_metadata?.avatar_url,
+          password_rotated: user.user_metadata?.password_rotated ?? false,
         });
+        // Show rotation banner for admins who haven't rotated yet
+        const rotated = !!user.user_metadata?.password_rotated;
+        setShowRotateBanner(isAdmin && !rotated);
+      } else {
+        setShowRotateBanner(false);
       }
     };
     loadUserProfile();
-  }, []);
+  }, [isAdmin]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -63,10 +74,10 @@ export function DashboardHeader() {
 
   return (
     <header className="h-16 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between h-full px-4 sm:px-6">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <SidebarTrigger />
-          <div className="relative w-80 max-w-sm">
+          <div className="relative hidden md:block md:w-80 md:max-w-sm flex-shrink-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input 
               placeholder="Search students, classes, or records..." 
@@ -75,7 +86,7 @@ export function DashboardHeader() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
             <Badge className="absolute -top-1 -right-1 px-1 py-0 text-xs bg-destructive">
@@ -117,12 +128,38 @@ export function DashboardHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+      {showRotateBanner && (
+        <div className="px-4 sm:px-6 py-2 bg-amber-50 border-t border-amber-200 text-amber-900 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm">
+            <ShieldAlert className="w-4 h-4" />
+            <span>
+              For security, please change your admin password now.
+            </span>
+          </div>
+          <div>
+            <Button size="sm" variant="outline" onClick={() => setShowPasswordDialog(true)}>Change password</Button>
+          </div>
+        </div>
+      )}
+      <ChangePasswordDialog
+        open={showPasswordDialog}
+        onOpenChange={(open) => {
+          setShowPasswordDialog(open);
+          if (!open) {
+            // Re-check profile to hide banner after rotation
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              const rotated = !!user?.user_metadata?.password_rotated;
+              setShowRotateBanner(isAdmin && !rotated);
+            });
+          }
+        }}
+        onRotated={() => setShowRotateBanner(false)}
+      />
     </header>
   );
 }

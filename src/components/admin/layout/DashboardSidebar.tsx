@@ -27,6 +27,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { INVITES_ENABLED } from "@/lib/config";
 
 interface NavigationItem {
   title: string;
@@ -34,7 +35,6 @@ interface NavigationItem {
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
 }
-
 interface DashboardSidebarProps {
   userRole: 'admin' | 'teacher' | 'student' | 'parent';
 }
@@ -52,13 +52,14 @@ const navigationItems: Record<string, NavigationItem[]> = {
     { title: "Timetable", url: "/timetable", icon: Calendar },
     { title: "Reports", url: "/reports", icon: FileText },
     { title: "Settings", url: "/settings", icon: Settings },
+    ...(INVITES_ENABLED ? [{ title: "Invites", url: "/admin/invites", icon: ClipboardList }] : []),
+    { title: "Create User", url: "/admin/create-user", icon: Users },
   ],
   teacher: [
     { title: "Dashboard", url: "/teacher/dashboard", icon: BarChart3 },
     { title: "My Classes", url: "/teacher/classes", icon: School },
     { title: "Attendance", url: "/teacher/attendance", icon: UserCheck },
     { title: "Gradebook", url: "/teacher/gradebook", icon: BookOpen },
-    { title: "Assessments", url: "/teacher/assessments", icon: ClipboardList },
     { title: "Timetable", url: "/teacher/timetable", icon: Calendar },
     { title: "Students", url: "/teacher/students", icon: Users },
   ],

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Auth from "./pages/Auth";
 import Index from "./pages/admin/Index";
 import Students from "./pages/admin/Students";
@@ -17,6 +18,10 @@ import Timetable from "./pages/admin/Timetable";
 import Reports from "./pages/admin/Reports";
 import Settings from "./pages/admin/Settings";
 import NotFound from "./pages/admin/NotFound";
+import AdminInvites from "./pages/admin/Invites";
+import AcceptInvite from "./pages/AcceptInvite";
+import CreateUser from "./pages/admin/CreateUser";
+import { INVITES_ENABLED } from "@/lib/config";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
 import TeacherAttendance from "./pages/teacher/Attendance";
@@ -41,19 +46,26 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          {INVITES_ENABLED && (
+            <Route path="/invite/accept" element={<AcceptInvite />} />
+          )}
           
           {/* Protected Routes */}
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
-          <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
-          <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
-          <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
-          <Route path="/gradebook" element={<ProtectedRoute><Gradebook /></ProtectedRoute>} />
-          <Route path="/assessments" element={<ProtectedRoute><Assessments /></ProtectedRoute>} />
-          <Route path="/fees" element={<ProtectedRoute><FeeManagement /></ProtectedRoute>} />
-          <Route path="/timetable" element={<ProtectedRoute><Timetable /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/" element={<AdminRoute><Index /></AdminRoute>} />
+          <Route path="/students" element={<AdminRoute><Students /></AdminRoute>} />
+          <Route path="/teachers" element={<AdminRoute><Teachers /></AdminRoute>} />
+          <Route path="/classes" element={<AdminRoute><Classes /></AdminRoute>} />
+          <Route path="/attendance" element={<AdminRoute><Attendance /></AdminRoute>} />
+          <Route path="/gradebook" element={<AdminRoute><Gradebook /></AdminRoute>} />
+          <Route path="/assessments" element={<AdminRoute><Assessments /></AdminRoute>} />
+          <Route path="/fees" element={<AdminRoute><FeeManagement /></AdminRoute>} />
+          <Route path="/timetable" element={<AdminRoute><Timetable /></AdminRoute>} />
+          <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
+          <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+          {INVITES_ENABLED && (
+            <Route path="/admin/invites" element={<AdminRoute><AdminInvites /></AdminRoute>} />
+          )}
+          <Route path="/admin/create-user" element={<AdminRoute><CreateUser /></AdminRoute>} />
           
           {/* Teacher Routes */}
           <Route path="/teacher/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />

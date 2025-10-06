@@ -255,8 +255,8 @@ export function StudentTable() {
       <CardHeader>
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <CardTitle className="text-xl font-semibold">Student Management</CardTitle>
-          <div className="flex gap-2">
-            <div className="relative flex-1 sm:w-80">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-80 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search students..."
@@ -291,13 +291,13 @@ export function StudentTable() {
       </CardHeader>
       <CardContent>
         <div className="rounded-lg border bg-background">
-          <Table>
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold">Student</TableHead>
-                <TableHead className="font-semibold">Admission No.</TableHead>
+                <TableHead className="font-semibold hidden md:table-cell">Admission No.</TableHead>
                 <TableHead className="font-semibold">Class</TableHead>
-                <TableHead className="font-semibold">Roll No.</TableHead>
+                <TableHead className="font-semibold hidden lg:table-cell">Roll No.</TableHead>
                 <TableHead className="font-semibold">Attendance</TableHead>
                 <TableHead className="font-semibold">Guardian</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
@@ -321,7 +321,7 @@ export function StudentTable() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{student.admissionNo}</TableCell>
+                  <TableCell className="hidden md:table-cell">{student.admissionNo}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{student.class}</div>
@@ -329,7 +329,7 @@ export function StudentTable() {
                     </div>
                   </TableCell>
                   <TableCell>{student.rollNo}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <span className={`font-medium ${getAttendanceColor(student.attendance)}`}>
                       {student.attendance}%
                     </span>
