@@ -3,7 +3,7 @@ import { AssessmentsManager } from "@/components/admin/assessments/AssessmentsMa
 
 export default function TeacherAssessments() {
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRoles={["teacher"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Assessments</h1>

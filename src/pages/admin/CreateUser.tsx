@@ -73,7 +73,7 @@ const CreateUser = () => {
 
   return (
     <AdminRoute>
-      <DashboardLayout userRole="admin">
+      <DashboardLayout userRoles={["admin"]} staffRoles={[]}>
         <Card className="bg-gradient-card border-0 shadow-md max-w-2xl">
           <CardHeader>
             <CardTitle>Create User (Admin)</CardTitle>

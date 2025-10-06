@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { RoleBasedRoute } from "@/components/RoleBasedRoute";
 import Auth from "./pages/Auth";
 import Index from "./pages/admin/Index";
 import Students from "./pages/admin/Students";
@@ -35,6 +36,7 @@ import StudentGrades from "./pages/student/Grades";
 import StudentAttendance from "./pages/student/Attendance";
 import StudentTimetable from "./pages/student/Timetable";
 import StudentAssignments from "./pages/student/Assignments";
+import Dashboard from "@/pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,16 @@ const App = () => (
           {INVITES_ENABLED && (
             <Route path="/invite/accept" element={<AcceptInvite />} />
           )}
+          
+          {/* Unified adaptive dashboard */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Protected Routes */}
           <Route path="/" element={<AdminRoute><Index /></AdminRoute>} />

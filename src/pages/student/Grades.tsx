@@ -66,7 +66,7 @@ export default function StudentGrades() {
   };
 
   return (
-    <DashboardLayout userRole="student">
+    <DashboardLayout userRoles={["student"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">My Grades</h1>

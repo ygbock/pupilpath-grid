@@ -8,7 +8,7 @@ export default function TeacherClasses() {
   const { classes, isLoading } = useClasses();
 
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRoles={["teacher"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">My Classes</h1>

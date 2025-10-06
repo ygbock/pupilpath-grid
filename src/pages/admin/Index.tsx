@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   return (
-    <DashboardLayout userRole="admin">
+    <DashboardLayout userRoles={["admin"]} staffRoles={[]}>
       <div className="space-y-6">
         {/* Welcome Header */}
         <div className="bg-gradient-hero rounded-2xl p-8 text-white">

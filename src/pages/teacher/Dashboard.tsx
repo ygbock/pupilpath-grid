@@ -6,7 +6,7 @@ import { UpcomingAssignments } from "@/components/teacher/dashboard/UpcomingAssi
 
 export default function TeacherDashboard() {
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRoles={["teacher"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Teacher Dashboard</h1>

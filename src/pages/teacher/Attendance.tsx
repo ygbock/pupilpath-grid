@@ -3,7 +3,7 @@ import { AttendanceTracker } from "@/components/admin/attendance/AttendanceTrack
 
 export default function TeacherAttendance() {
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRoles={["teacher"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Attendance</h1>

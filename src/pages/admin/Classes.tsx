@@ -20,7 +20,7 @@ const Classes = () => {
   };
 
   return (
-    <DashboardLayout userRole="admin">
+    <DashboardLayout userRoles={["admin"]} staffRoles={[]}>
       <div className="space-y-6">
         <div className="bg-gradient-subtle rounded-2xl p-8 border">
           <div className="flex items-center gap-4 mb-4">

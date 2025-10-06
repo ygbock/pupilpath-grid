@@ -3,7 +3,7 @@ import { TimetableManager } from "@/components/admin/timetable/TimetableManager"
 
 export default function TeacherTimetable() {
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRoles={["teacher"]} staffRoles={[]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Timetable</h1>

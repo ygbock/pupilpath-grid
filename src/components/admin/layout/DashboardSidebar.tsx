@@ -36,7 +36,8 @@ interface NavigationItem {
   badge?: string;
 }
 interface DashboardSidebarProps {
-  userRole: 'admin' | 'teacher' | 'student' | 'parent';
+  userRoles?: string[]; // Support multiple roles
+  staffRoles?: Array<{ name: string }>;
 }
 
 const navigationItems: Record<string, NavigationItem[]> = {
@@ -81,12 +82,70 @@ const navigationItems: Record<string, NavigationItem[]> = {
   ],
 };
 
-export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
+export function DashboardSidebar({ userRoles = [], staffRoles = [] }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const items = navigationItems[userRole] || navigationItems.admin;
+  // Combine navigation items from all roles
+  const getAllowedItems = () => {
+    const itemsSet = new Map<string, NavigationItem>();
+    
+    // Add items based on user roles (admin, teacher, student, parent)
+    userRoles.forEach(role => {
+      const roleItems = navigationItems[role as keyof typeof navigationItems];
+      if (roleItems) {
+        roleItems.forEach(item => {
+          if (!itemsSet.has(item.url)) {
+            itemsSet.set(item.url, item);
+          }
+        });
+      }
+    });
+
+    // Add items based on staff roles
+    const staffRoleNames = staffRoles.map(sr => sr.name);
+    if (staffRoleNames.includes('Principal') || staffRoleNames.includes('Vice Principal')) {
+      // Principal and VP get all admin items
+      navigationItems.admin?.forEach(item => {
+        if (!itemsSet.has(item.url)) {
+          itemsSet.set(item.url, item);
+        }
+      });
+    }
+
+    // HOD gets additional access
+    if (staffRoleNames.includes('HOD')) {
+      const hodItems: NavigationItem[] = [
+        { title: "Teachers", url: "/teachers", icon: Users },
+        { title: "Reports", url: "/reports", icon: FileText },
+      ];
+      hodItems.forEach(item => {
+        if (!itemsSet.has(item.url)) {
+          itemsSet.set(item.url, item);
+        }
+      });
+    }
+
+    return Array.from(itemsSet.values());
+  };
+
+  const items = getAllowedItems();
+  
+  // Determine primary role label
+  const getPrimaryRole = () => {
+    const staffRoleNames = staffRoles.map(sr => sr.name);
+    if (staffRoleNames.includes('Principal')) return 'Principal';
+    if (staffRoleNames.includes('Vice Principal')) return 'Vice Principal';
+    if (userRoles.includes('admin')) return 'Admin';
+    if (staffRoleNames.includes('HOD')) return 'HOD';
+    if (staffRoleNames.includes('Form Master')) return 'Form Master';
+    if (userRoles.includes('teacher')) return 'Teacher';
+    if (userRoles.includes('student')) return 'Student';
+    return 'User';
+  };
+  
+  const primaryRole = getPrimaryRole();
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -112,7 +171,7 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
               <div>
                 <h1 className="font-bold text-lg text-foreground">EduManager</h1>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                  {userRole}
+                  {primaryRole}
                 </p>
               </div>
             )}

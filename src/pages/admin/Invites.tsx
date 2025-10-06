@@ -78,7 +78,7 @@ const Invites = () => {
 
   return (
     <AdminRoute>
-      <DashboardLayout userRole="admin">
+      <DashboardLayout userRoles={["admin"]} staffRoles={[]}>
         <Card className="bg-gradient-card border-0 shadow-md mb-6">
           <CardHeader>
             <CardTitle>Create Invite</CardTitle>
