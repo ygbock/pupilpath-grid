@@ -104,6 +104,7 @@ export type Database = {
         Row: {
           academic_year: string | null
           created_at: string | null
+          form_teacher_id: string | null
           grade_level: string | null
           id: string
           max_students: number | null
@@ -117,6 +118,7 @@ export type Database = {
         Insert: {
           academic_year?: string | null
           created_at?: string | null
+          form_teacher_id?: string | null
           grade_level?: string | null
           id?: string
           max_students?: number | null
@@ -130,6 +132,7 @@ export type Database = {
         Update: {
           academic_year?: string | null
           created_at?: string | null
+          form_teacher_id?: string | null
           grade_level?: string | null
           id?: string
           max_students?: number | null
@@ -142,6 +145,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "classes_form_teacher_id_fkey"
+            columns: ["form_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "classes_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
@@ -149,6 +159,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      departments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       enrollments: {
         Row: {
@@ -284,6 +318,48 @@ export type Database = {
           },
         ]
       }
+      hod_assignments: {
+        Row: {
+          created_at: string | null
+          department_id: string
+          end_date: string | null
+          id: string
+          start_date: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          department_id: string
+          end_date?: string | null
+          id?: string
+          start_date?: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string
+          end_date?: string | null
+          id?: string
+          start_date?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hod_assignments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hod_assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           created_at: string
@@ -355,6 +431,27 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -387,6 +484,42 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "staff_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff: {
         Row: {
@@ -557,6 +690,93 @@ export type Database = {
           },
         ]
       }
+      subjects: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          department_id: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_subject_assignments: {
+        Row: {
+          academic_year: string | null
+          class_id: string
+          created_at: string | null
+          id: string
+          subject_id: string
+          teacher_id: string
+        }
+        Insert: {
+          academic_year?: string | null
+          class_id: string
+          created_at?: string | null
+          id?: string
+          subject_id: string
+          teacher_id: string
+        }
+        Update: {
+          academic_year?: string | null
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          subject_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_subject_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_subject_assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_subject_assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teachers: {
         Row: {
           created_at: string | null
@@ -668,6 +888,10 @@ export type Database = {
       assign_admin_role: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
