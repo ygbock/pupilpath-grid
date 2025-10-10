@@ -48,38 +48,127 @@ export function useStudents() {
 
   const createStudent = useMutation({
     mutationFn: async (studentData: any) => {
-      // First create user profile with a UUID
-      const newId = crypto.randomUUID();
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: newId,
-          full_name: `${studentData.firstName} ${studentData.lastName}`,
-          email: studentData.email,
-          phone: studentData.parentPhone,
-          address: studentData.address,
-        })
-        .select()
-        .single();
+      const fullName = `${studentData.firstName} ${studentData.lastName}`.trim();
 
-      if (profileError) throw profileError;
+      if (studentData.createLogin) {
+        // Create auth user via Edge Function (admin-only) and use returned user_id
+        const { data: created, error: fnErr } = await supabase.functions.invoke("create-user", {
+          body: {
+            email: studentData.email,
+            password: studentData.tempPassword,
+            role: "student",
+            full_name: fullName,
+            phone: studentData.parentPhone,
+            require_reset: !!studentData.requireReset,
+          },
+        } as any);
+        if (fnErr) throw fnErr;
+        const newUserId = (created as any)?.user_id;
+        if (!newUserId) throw new Error("create-user failed: missing user_id");
 
-      // Then create student record
-      const { data, error } = await supabase
-        .from("students")
-        .insert({
-          user_id: profileData.id,
-          student_id: studentData.admissionNo,
-          grade_level: studentData.class,
-          guardian_name: studentData.parentName,
-          guardian_phone: studentData.parentPhone,
-          date_of_birth: studentData.dateOfBirth,
-        })
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from("students")
+          .insert({
+            user_id: newUserId,
+            student_id: studentData.admissionNo,
+            grade_level: studentData.class,
+            guardian_name: studentData.parentName,
+            guardian_phone: studentData.parentPhone,
+            date_of_birth: studentData.dateOfBirth,
+          })
+          .select()
+          .single();
+        if (error) throw error;
 
-      if (error) throw error;
-      return data;
+        // Optionally notify credentials
+        if (studentData.shareEmail || studentData.shareSms) {
+          const { error: notifyErr } = await supabase.functions.invoke("notify-credentials", {
+            body: {
+              email: studentData.email,
+              phone: studentData.parentPhone,
+              full_name: fullName,
+              password: studentData.tempPassword,
+              role: "student",
+              send_email: !!studentData.shareEmail,
+              send_sms: !!studentData.shareSms,
+            },
+          } as any);
+          if (notifyErr) {
+            toast({ title: "Notify failed", description: notifyErr.message || String(notifyErr), variant: "destructive" });
+          }
+        }
+
+        // Optionally issue ID Card
+        if (studentData.issueIdCard && studentData.idCardTemplateId) {
+          const raw = supabase as any;
+          const expiresAt = studentData.idCardExpires ? new Date(studentData.idCardExpires).toISOString() : null;
+          const { error: issueErr } = await raw
+            .from("id_card_issuance")
+            .insert({
+              subject_type: "student",
+              student_id: data.id,
+              template_id: studentData.idCardTemplateId,
+              expires_at: expiresAt,
+              qr_payload: null,
+              card_data: {},
+            });
+          if (issueErr) {
+            toast({ title: "ID Card issue failed", description: issueErr.message || String(issueErr), variant: "destructive" });
+          }
+        }
+
+        return data;
+      } else {
+        // Legacy path: create local profile first, then student row
+        const newId = crypto.randomUUID();
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .insert({
+            id: newId,
+            full_name: fullName,
+            email: studentData.email,
+            phone: studentData.parentPhone,
+            address: studentData.address,
+          })
+          .select()
+          .single();
+        if (profileError) throw profileError;
+
+        const { data, error } = await supabase
+          .from("students")
+          .insert({
+            user_id: profileData.id,
+            student_id: studentData.admissionNo,
+            grade_level: studentData.class,
+            guardian_name: studentData.parentName,
+            guardian_phone: studentData.parentPhone,
+            date_of_birth: studentData.dateOfBirth,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+
+        // Optionally issue ID Card (legacy path)
+        if (studentData.issueIdCard && studentData.idCardTemplateId) {
+          const raw = supabase as any;
+          const expiresAt = studentData.idCardExpires ? new Date(studentData.idCardExpires).toISOString() : null;
+          const { error: issueErr } = await raw
+            .from("id_card_issuance")
+            .insert({
+              subject_type: "student",
+              student_id: data.id,
+              template_id: studentData.idCardTemplateId,
+              expires_at: expiresAt,
+              qr_payload: null,
+              card_data: {},
+            });
+          if (issueErr) {
+            toast({ title: "ID Card issue failed", description: issueErr.message || String(issueErr), variant: "destructive" });
+          }
+        }
+
+        return data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });

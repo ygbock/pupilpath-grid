@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { AdminRoute } from "@/components/AdminRoute";
 import { DashboardLayout } from "@/components/admin/layout/DashboardLayout";
 
 const CreateUser = () => {
@@ -22,6 +21,23 @@ const CreateUser = () => {
   const [sendEmail, setSendEmail] = useState(true);
   const [sendSms, setSendSms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState<string[]>([
+    "admin","staff","student","teacher","principal","vice_principal","hod","exam_officer","form_master","subject_teacher","assistant_teacher","parent"
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).from("roles").select("key").order("key");
+        if (error) throw error;
+        if (!cancelled && data) setRoles(data.map((r: any) => r.key));
+      } catch (e) {
+        // keep default list if query fails
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +88,6 @@ const CreateUser = () => {
   };
 
   return (
-    <AdminRoute>
       <DashboardLayout userRole="admin">
         <Card className="bg-gradient-card border-0 shadow-md max-w-2xl">
           <CardHeader>
@@ -99,9 +114,9 @@ const CreateUser = () => {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
+                    {roles.map((r) => (
+                      <SelectItem key={r} value={r}>{r.replace(/_/g, ' ')}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -134,7 +149,6 @@ const CreateUser = () => {
           </CardContent>
         </Card>
       </DashboardLayout>
-    </AdminRoute>
   );
 };
 

@@ -23,6 +23,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useIdCardTemplates } from "@/hooks/useIdCards";
 
 const studentFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -38,6 +41,25 @@ const studentFormSchema = z.object({
   parentEmail: z.string().email("Invalid parent email"),
   parentPhone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(10, "Address must be at least 10 characters"),
+  // Login creation (admin-only; validated client-side)
+  createLogin: z.boolean().optional().default(false),
+  tempPassword: z.string().optional(),
+  requireReset: z.boolean().optional().default(true),
+  shareEmail: z.boolean().optional().default(true),
+  shareSms: z.boolean().optional().default(false),
+  // ID card issuing (admin-only; requires idcards.manage)
+  issueIdCard: z.boolean().optional().default(false),
+  idCardTemplateId: z.string().optional(),
+  idCardExpires: z.string().optional(),
+}).superRefine((vals, ctx) => {
+  if (vals.createLogin) {
+    if (!vals.tempPassword || vals.tempPassword.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["tempPassword"], message: "Password must be at least 8 characters" });
+    }
+  }
+  if (vals.issueIdCard && !vals.idCardTemplateId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["idCardTemplateId"], message: "Select a template" });
+  }
 });
 
 type StudentFormValues = z.infer<typeof studentFormSchema>;
@@ -51,6 +73,10 @@ interface StudentFormProps {
 
 export function StudentForm({ initialData, onSubmit, onCancel, readOnly }: StudentFormProps) {
   const [profileImage, setProfileImage] = useState<string>("");
+  const { can } = usePermissions();
+  const canCreateUsers = can("users.manage");
+  const canIdManage = can("idcards.manage");
+  const { templates } = useIdCardTemplates();
   
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
@@ -68,6 +94,14 @@ export function StudentForm({ initialData, onSubmit, onCancel, readOnly }: Stude
       parentEmail: "",
       parentPhone: "",
       address: "",
+      createLogin: false,
+      tempPassword: "",
+      requireReset: true,
+      shareEmail: true,
+      shareSms: false,
+      issueIdCard: false,
+      idCardTemplateId: "",
+      idCardExpires: "",
     },
   });
 
@@ -121,6 +155,77 @@ export function StudentForm({ initialData, onSubmit, onCancel, readOnly }: Stude
               Recommended: 500x500px, max 2MB
             </p>
           </div>
+
+        {canCreateUsers && !readOnly && (
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="text-lg font-semibold">Login Credentials (optional)</h3>
+            <div className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name="createLogin"
+                render={({ field }) => (
+                  <>
+                    <Checkbox id="createLogin" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                    <label htmlFor="createLogin" className="text-sm">Create student login now</label>
+                  </>
+                )}
+              />
+            </div>
+            {form.getValues("createLogin") && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="tempPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temporary Password</FormLabel>
+                      <FormControl>
+                        <Input type="text" minLength={8} placeholder="Min 8 chars" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex items-center gap-2 mt-8">
+                  <FormField
+                    control={form.control}
+                    name="requireReset"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="requireReset" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="requireReset" className="text-sm">Require password change on first login</label>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="shareEmail"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="shareEmail" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="shareEmail" className="text-sm">Share credentials via Email</label>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="shareSms"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="shareSms" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="shareSms" className="text-sm">Share credentials via SMS (uses parent phone)</label>
+                      </>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

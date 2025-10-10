@@ -28,6 +28,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { INVITES_ENABLED } from "@/lib/config";
+import { useRoles } from "@/hooks/useRole";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { Permission } from "@/rbac/permissions";
+import { getNavItems } from "@/rbac/nav";
 
 interface NavigationItem {
   title: string;
@@ -36,57 +40,78 @@ interface NavigationItem {
   badge?: string;
 }
 interface DashboardSidebarProps {
-  userRole: 'admin' | 'teacher' | 'student' | 'parent';
+  rolesOverride?: string[];
 }
 
-const navigationItems: Record<string, NavigationItem[]> = {
-  admin: [
-    { title: "Dashboard", url: "/", icon: BarChart3 },
-    { title: "Students", url: "/students", icon: Users },
-    { title: "Teachers", url: "/teachers", icon: GraduationCap },
-    { title: "Classes & Sections", url: "/classes", icon: School },
-    { title: "Attendance", url: "/attendance", icon: UserCheck },
-    { title: "Gradebook", url: "/gradebook", icon: BookOpen },
-    { title: "Assessments", url: "/assessments", icon: ClipboardList },
-    { title: "Fee Management", url: "/fees", icon: CreditCard },
-    { title: "Timetable", url: "/timetable", icon: Calendar },
-    { title: "Reports", url: "/reports", icon: FileText },
-    { title: "Settings", url: "/settings", icon: Settings },
-    ...(INVITES_ENABLED ? [{ title: "Invites", url: "/admin/invites", icon: ClipboardList }] : []),
-    { title: "Create User", url: "/admin/create-user", icon: Users },
-  ],
-  teacher: [
-    { title: "Dashboard", url: "/teacher/dashboard", icon: BarChart3 },
-    { title: "My Classes", url: "/teacher/classes", icon: School },
-    { title: "Attendance", url: "/teacher/attendance", icon: UserCheck },
-    { title: "Gradebook", url: "/teacher/gradebook", icon: BookOpen },
-    { title: "Timetable", url: "/teacher/timetable", icon: Calendar },
-    { title: "Students", url: "/teacher/students", icon: Users },
-  ],
-  student: [
-    { title: "Dashboard", url: "/student/dashboard", icon: BarChart3 },
-    { title: "My Classes", url: "/student/classes", icon: School },
-    { title: "My Grades", url: "/student/grades", icon: Award },
-    { title: "Attendance", url: "/student/attendance", icon: Clock },
-    { title: "Timetable", url: "/student/timetable", icon: Calendar },
-    { title: "Assignments", url: "/student/assignments", icon: ClipboardList },
-  ],
-  parent: [
-    { title: "Dashboard", url: "/", icon: BarChart3 },
-    { title: "My Children", url: "/children", icon: Users },
-    { title: "Attendance", url: "/attendance", icon: Clock },
-    { title: "Grades", url: "/grades", icon: Award },
-    { title: "Fee Payments", url: "/fees", icon: CreditCard },
-    { title: "Timetable", url: "/timetable", icon: Calendar },
-  ],
-};
+// Navigation is now registry-driven via getNavItems()
 
-export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
+export function DashboardSidebar({ rolesOverride }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { roles: fetchedRoles } = useRoles();
+  const { can } = usePermissions();
+  const effectiveRoles = rolesOverride && rolesOverride.length > 0 ? rolesOverride : (fetchedRoles || ["admin"]);
 
-  const items = navigationItems[userRole] || navigationItems.admin;
+  // Load registry-driven items
+  const registry = getNavItems();
+  // Filter by roles (if item.roles provided, intersects with effectiveRoles)
+  const roleFiltered = registry.filter((it) => {
+    if (!("roles" in it) || !it.roles || it.roles.length === 0) return true;
+    return it.roles.some((r) => effectiveRoles.includes(r));
+  });
+  // Filter by permissions (if item.required provided)
+  const permAllows = (req?: Permission | Permission[]) => {
+    if (!req) return true;
+    if (Array.isArray(req)) return req.every((p) => can(p));
+    return can(req);
+  };
+  const permFiltered = roleFiltered.filter((it: any) => permAllows(it.required));
+  // Dedupe by URL
+  const dedup = new Set<string>();
+  const merged = permFiltered.filter((it) => {
+    if (dedup.has(it.url)) return false;
+    dedup.add(it.url);
+    return true;
+  });
+
+  // Collapse multiple dashboard-like entries into a single canonical Home at '/'
+  const dashboardLike = (u: string, t: string) => t.toLowerCase().includes("dashboard") || u.endsWith("/dashboard");
+  const withoutExtraDashboards = merged.filter((it) => !(it.url !== "/" && dashboardLike(it.url, it.title)));
+  const rootIndex = withoutExtraDashboards.findIndex((it) => it.url === "/");
+  if (rootIndex >= 0) {
+    // Rename root item to Home
+    withoutExtraDashboards[rootIndex] = { ...withoutExtraDashboards[rootIndex], title: "Home" };
+  } else {
+    // Ensure Home exists
+    withoutExtraDashboards.unshift({ title: "Home", url: "/", icon: BarChart3 });
+  }
+  const items = withoutExtraDashboards;
+
+  // Permission filter for admin-like routes
+  const permByUrl: Record<string, Permission> = {
+    "/students": "students.manage",
+    "/teachers": "teachers.manage",
+    "/classes": "classes.manage",
+    "/attendance": "attendance.view",
+    "/gradebook": "gradebook.view",
+    "/assessments": "assessments.manage",
+    "/fees": "fees.manage",
+    "/timetable": "timetable.view",
+    "/reports": "reports.view",
+    "/settings": "settings.manage",
+    "/admin/invites": "invites.manage",
+    "/admin/create-user": "users.manage",
+  };
+
+  const filtered = items.filter((it) => {
+    // Never hide Home
+    if (it.url === "/") return true;
+    // Only enforce perms for admin-like root routes
+    const p = permByUrl[it.url];
+    if (!p) return true; // routes like /teacher/* or /student/* pass
+    return can(p);
+  });
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -112,7 +137,7 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
               <div>
                 <h1 className="font-bold text-lg text-foreground">EduManager</h1>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                  {userRole}
+                  {effectiveRoles.join(", ")}
                 </p>
               </div>
             )}
@@ -125,7 +150,7 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {items.map((item) => (
+              {filtered.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 

@@ -77,6 +77,26 @@ export function useTeachers() {
         .single();
 
       if (error) throw error;
+
+      // Optionally issue ID Card for staff
+      if (teacherData.issueIdCard && teacherData.idCardTemplateId && data?.id) {
+        const raw = supabase as any;
+        const expiresAt = teacherData.idCardExpires ? new Date(teacherData.idCardExpires).toISOString() : null;
+        const { error: issueErr } = await raw
+          .from("id_card_issuance")
+          .insert({
+            subject_type: "staff",
+            teacher_id: data.id,
+            template_id: teacherData.idCardTemplateId,
+            expires_at: expiresAt,
+            qr_payload: null,
+            card_data: {},
+          });
+        if (issueErr) {
+          toast({ title: "ID Card issue failed", description: issueErr.message || String(issueErr), variant: "destructive" });
+        }
+      }
+
       return data;
     },
     onSuccess: () => {

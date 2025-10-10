@@ -7,6 +7,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.1";
 
 serve(async (req) => {
   try {
+    const ORIGIN = req.headers.get("origin") || "*";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": ORIGIN,
+      "Vary": "Origin",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    } as const;
+
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { status: 200, headers: corsHeaders });
+    }
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -18,26 +29,26 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const accessToken = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null;
     if (!accessToken) {
-      return new Response(JSON.stringify({ error: "missing access token" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "missing access token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: userData, error: getUserErr } = await supabaseAdmin.auth.getUser(accessToken);
     if (getUserErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "invalid access token" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "invalid access token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const callerId = userData.user.id;
 
-    // Check admin role via DB using service role (bypass RLS, but we validate explicitly)
-    const { data: hasAdmin, error: roleErr } = await supabaseAdmin.rpc("has_role" as any, {
+    // Authorize via permissions: only admin (users.manage) can create accounts
+    const { data: canCreate, error: permErr } = await supabaseAdmin.rpc("has_permission" as any, {
       _user_id: callerId,
-      _role: "admin",
+      _permission: "users.manage",
     } as any);
-    if (roleErr) {
-      return new Response(JSON.stringify({ error: roleErr.message }), { status: 500 });
+    if (permErr) {
+      return new Response(JSON.stringify({ error: permErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (!hasAdmin) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+    if (!canCreate) {
+      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const body = await req.json();
@@ -48,8 +59,20 @@ serve(async (req) => {
     const phone: string | undefined = body?.phone;
     const require_reset: boolean = !!body?.require_reset;
 
-    if (!email || !password || !role || !["admin", "staff", "student"].includes(role)) {
-      return new Response(JSON.stringify({ error: "invalid payload" }), { status: 400 });
+    if (!email || !password || !role) {
+      return new Response(JSON.stringify({ error: "invalid payload" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // Ensure role exists in catalog
+    const { data: roleRow, error: roleLookupErr } = await supabaseAdmin
+      .from("roles")
+      .select("key")
+      .eq("key", role)
+      .maybeSingle();
+    if (roleLookupErr) {
+      return new Response(JSON.stringify({ error: roleLookupErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: "invalid role" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Create user in auth and mark email confirmed so they can sign in immediately
@@ -64,7 +87,7 @@ serve(async (req) => {
       },
     });
     if (createErr || !created?.user) {
-      return new Response(JSON.stringify({ error: createErr?.message || "create user failed" }), { status: 400 });
+      return new Response(JSON.stringify({ error: createErr?.message || "create user failed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const newUserId = created.user.id;
@@ -78,7 +101,7 @@ serve(async (req) => {
     if (roleInsErr) {
       // Best-effort rollback user
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
-      return new Response(JSON.stringify({ error: roleInsErr.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: roleInsErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Optional profile row if your schema expects it
@@ -91,9 +114,16 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, user_id: newUserId }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    const ORIGIN = req.headers.get("origin") || "*";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": ORIGIN,
+      "Vary": "Origin",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    } as const;
+    return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

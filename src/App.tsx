@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { PermissionRoute } from "@/components/PermissionRoute";
 import Auth from "./pages/Auth";
 import Index from "./pages/admin/Index";
 import Students from "./pages/admin/Students";
@@ -22,6 +23,7 @@ import AdminInvites from "./pages/admin/Invites";
 import AcceptInvite from "./pages/AcceptInvite";
 import CreateUser from "./pages/admin/CreateUser";
 import { INVITES_ENABLED } from "@/lib/config";
+import RoleHome from "./pages/RoleHome";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
 import TeacherAttendance from "./pages/teacher/Attendance";
@@ -35,6 +37,7 @@ import StudentGrades from "./pages/student/Grades";
 import StudentAttendance from "./pages/student/Attendance";
 import StudentTimetable from "./pages/student/Timetable";
 import StudentAssignments from "./pages/student/Assignments";
+import IDCardsPage from "./pages/admin/IDCards";
 
 const queryClient = new QueryClient();
 
@@ -51,21 +54,22 @@ const App = () => (
           )}
           
           {/* Protected Routes */}
-          <Route path="/" element={<AdminRoute><Index /></AdminRoute>} />
-          <Route path="/students" element={<AdminRoute><Students /></AdminRoute>} />
-          <Route path="/teachers" element={<AdminRoute><Teachers /></AdminRoute>} />
-          <Route path="/classes" element={<AdminRoute><Classes /></AdminRoute>} />
-          <Route path="/attendance" element={<AdminRoute><Attendance /></AdminRoute>} />
-          <Route path="/gradebook" element={<AdminRoute><Gradebook /></AdminRoute>} />
-          <Route path="/assessments" element={<AdminRoute><Assessments /></AdminRoute>} />
-          <Route path="/fees" element={<AdminRoute><FeeManagement /></AdminRoute>} />
-          <Route path="/timetable" element={<AdminRoute><Timetable /></AdminRoute>} />
-          <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
-          <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+          <Route path="/" element={<ProtectedRoute><RoleHome /></ProtectedRoute>} />
+          <Route path="/students" element={<PermissionRoute required="students.manage"><Students /></PermissionRoute>} />
+          <Route path="/teachers" element={<PermissionRoute required="teachers.manage"><Teachers /></PermissionRoute>} />
+          <Route path="/classes" element={<PermissionRoute required="classes.manage"><Classes /></PermissionRoute>} />
+          <Route path="/attendance" element={<PermissionRoute required="attendance.view"><Attendance /></PermissionRoute>} />
+          <Route path="/gradebook" element={<PermissionRoute required="gradebook.view"><Gradebook /></PermissionRoute>} />
+          <Route path="/assessments" element={<PermissionRoute required="assessments.manage"><Assessments /></PermissionRoute>} />
+          <Route path="/fees" element={<PermissionRoute required="fees.manage"><FeeManagement /></PermissionRoute>} />
+          <Route path="/timetable" element={<PermissionRoute required="timetable.view"><Timetable /></PermissionRoute>} />
+          <Route path="/reports" element={<PermissionRoute required="reports.view"><Reports /></PermissionRoute>} />
+          <Route path="/settings" element={<PermissionRoute required="settings.manage"><Settings /></PermissionRoute>} />
+          <Route path="/id-cards" element={<PermissionRoute required="idcards.view"><IDCardsPage /></PermissionRoute>} />
           {INVITES_ENABLED && (
-            <Route path="/admin/invites" element={<AdminRoute><AdminInvites /></AdminRoute>} />
+            <Route path="/admin/invites" element={<PermissionRoute required="invites.manage"><AdminInvites /></PermissionRoute>} />
           )}
-          <Route path="/admin/create-user" element={<AdminRoute><CreateUser /></AdminRoute>} />
+          <Route path="/admin/create-user" element={<PermissionRoute required="users.manage"><CreateUser /></PermissionRoute>} />
           
           {/* Teacher Routes */}
           <Route path="/teacher/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />

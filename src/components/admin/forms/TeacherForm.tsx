@@ -23,6 +23,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useIdCardTemplates } from "@/hooks/useIdCards";
 
 const teacherFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -39,6 +42,26 @@ const teacherFormSchema = z.object({
   department: z.string().min(1, "Department is required"),
   address: z.string().min(10, "Address must be at least 10 characters"),
   emergencyContact: z.string().min(10, "Emergency contact is required"),
+  // Login creation (admin-only; validated client-side)
+  createLogin: z.boolean().optional().default(false),
+  accountRole: z.string().optional(),
+  tempPassword: z.string().optional(),
+  requireReset: z.boolean().optional().default(true),
+  shareEmail: z.boolean().optional().default(true),
+  shareSms: z.boolean().optional().default(false),
+  // ID card issuing (admin-only; requires idcards.manage)
+  issueIdCard: z.boolean().optional().default(false),
+  idCardTemplateId: z.string().optional(),
+  idCardExpires: z.string().optional(),
+}).superRefine((vals, ctx) => {
+  if (vals.createLogin) {
+    if (!vals.tempPassword || vals.tempPassword.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["tempPassword"], message: "Password must be at least 8 characters" });
+    }
+  }
+  if (vals.issueIdCard && !vals.idCardTemplateId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["idCardTemplateId"], message: "Select a template" });
+  }
 });
 
 type TeacherFormValues = z.infer<typeof teacherFormSchema>;
@@ -52,6 +75,10 @@ interface TeacherFormProps {
 
 export function TeacherForm({ initialData, onSubmit, onCancel, readOnly }: TeacherFormProps) {
   const [profileImage, setProfileImage] = useState<string>("");
+  const { can } = usePermissions();
+  const canCreateUsers = can("users.manage");
+  const canIdManage = can("idcards.manage");
+  const { templates } = useIdCardTemplates();
   
   const form = useForm<TeacherFormValues>({
     resolver: zodResolver(teacherFormSchema),
@@ -70,6 +97,15 @@ export function TeacherForm({ initialData, onSubmit, onCancel, readOnly }: Teach
       department: "",
       address: "",
       emergencyContact: "",
+      createLogin: false,
+      accountRole: "teacher",
+      tempPassword: "",
+      requireReset: true,
+      shareEmail: true,
+      shareSms: false,
+      issueIdCard: false,
+      idCardTemplateId: "",
+      idCardExpires: "",
     },
   });
 
@@ -124,6 +160,161 @@ export function TeacherForm({ initialData, onSubmit, onCancel, readOnly }: Teach
             </p>
           </div>
         </div>
+
+        {canCreateUsers && !readOnly && (
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="text-lg font-semibold">Account & Login (optional)</h3>
+            <div className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name="createLogin"
+                render={({ field }) => (
+                  <>
+                    <Checkbox id="t-createLogin" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                    <label htmlFor="t-createLogin" className="text-sm">Create staff login now</label>
+                  </>
+                )}
+              />
+            </div>
+            {form.getValues("createLogin") && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="accountRole"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Role</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="teacher">Teacher</SelectItem>
+                          <SelectItem value="subject_teacher">Subject Teacher</SelectItem>
+                          <SelectItem value="assistant_teacher">Assistant Teacher</SelectItem>
+                          <SelectItem value="form_master">Form Master</SelectItem>
+                          <SelectItem value="hod">Head of Department</SelectItem>
+                          <SelectItem value="vice_principal">Vice Principal</SelectItem>
+                          <SelectItem value="principal">Principal</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tempPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temporary Password</FormLabel>
+                      <FormControl>
+                        <Input type="text" minLength={8} placeholder="Min 8 chars" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex items-center gap-2 mt-8">
+                  <FormField
+                    control={form.control}
+                    name="requireReset"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="t-requireReset" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="t-requireReset" className="text-sm">Require password change on first login</label>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="shareEmail"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="t-shareEmail" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="t-shareEmail" className="text-sm">Share credentials via Email</label>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="shareSms"
+                    render={({ field }) => (
+                      <>
+                        <Checkbox id="t-shareSms" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                        <label htmlFor="t-shareSms" className="text-sm">Share credentials via SMS</label>
+                      </>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {canIdManage && !readOnly && (
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="text-lg font-semibold">ID Card (optional)</h3>
+            <div className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name="issueIdCard"
+                render={({ field }) => (
+                  <>
+                    <Checkbox id="staffIssueIdCard" checked={!!field.value} onCheckedChange={(c) => field.onChange(!!c)} />
+                    <label htmlFor="staffIssueIdCard" className="text-sm">Issue ID card after creating staff</label>
+                  </>
+                )}
+              />
+            </div>
+            {form.getValues("issueIdCard") && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="idCardTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Template</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select template" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(templates.data || []).filter((t) => t.target_type === "staff").map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="idCardExpires"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Expires (optional)</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

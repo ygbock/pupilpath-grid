@@ -8,6 +8,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.1";
 
 serve(async (req) => {
   try {
+    const ORIGIN = req.headers.get("origin") || "*";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": ORIGIN,
+      "Vary": "Origin",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    } as const;
+
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { status: 200, headers: corsHeaders });
+    }
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -17,14 +28,18 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     const accessToken = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null;
-    if (!accessToken) return new Response(JSON.stringify({ error: "missing access token" }), { status: 401 });
+    if (!accessToken) return new Response(JSON.stringify({ error: "missing access token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: userData, error: getUserErr } = await supabaseAdmin.auth.getUser(accessToken);
-    if (getUserErr || !userData?.user) return new Response(JSON.stringify({ error: "invalid access token" }), { status: 401 });
+    if (getUserErr || !userData?.user) return new Response(JSON.stringify({ error: "invalid access token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const callerId = userData.user.id;
-    const { data: isAdmin } = await supabaseAdmin.rpc("has_role" as any, { _user_id: callerId, _role: "admin" } as any);
-    if (!isAdmin) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+    const { data: canSend, error: permErr } = await supabaseAdmin.rpc("has_permission" as any, {
+      _user_id: callerId,
+      _permission: "users.manage",
+    } as any);
+    if (permErr) return new Response(JSON.stringify({ error: permErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!canSend) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = await req.json();
     const email: string | undefined = body?.email;
@@ -36,7 +51,7 @@ serve(async (req) => {
     const send_sms: boolean = !!body?.send_sms;
 
     if (!password || !role) {
-      return new Response(JSON.stringify({ error: "missing fields" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "missing fields" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const tasks: Promise<Response | void>[] = [];
@@ -95,8 +110,15 @@ serve(async (req) => {
 
     await Promise.all(tasks);
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+    const ORIGIN = req.headers.get("origin") || "*";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": ORIGIN,
+      "Vary": "Origin",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    } as const;
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
