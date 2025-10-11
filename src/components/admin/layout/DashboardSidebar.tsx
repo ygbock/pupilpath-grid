@@ -27,7 +27,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { INVITES_ENABLED } from "@/lib/config";
 import { useRoles } from "@/hooks/useRole";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { Permission } from "@/rbac/permissions";
@@ -117,13 +116,11 @@ export function DashboardSidebar({ rolesOverride }: DashboardSidebarProps) {
     if (path === "/") return currentPath === "/";
     return currentPath.startsWith(path);
   };
-
   const getNavClassName = (path: string) => {
-    return isActive(path) 
-      ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+    return isActive(path)
+      ? "bg-primary text-primary-foreground font-medium shadow-sm"
       : "hover:bg-accent hover:text-accent-foreground transition-colors";
   };
-
   return (
     <Sidebar className="border-r">
       <SidebarContent className="p-4">

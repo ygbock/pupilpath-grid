@@ -15,7 +15,6 @@ import { useTeachers } from "@/hooks/useTeachers";
 const Teachers = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { createTeacher } = useTeachers();
-
   const handleSubmit = async (data: any) => {
     await createTeacher.mutateAsync(data);
     setIsDialogOpen(false);
@@ -39,7 +38,7 @@ const Teachers = () => {
             Add Teacher
           </Button>
         </div>
-        
+
         <TeachersTable />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

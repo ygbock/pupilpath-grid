@@ -13,7 +13,6 @@ import { Plus, ClipboardList } from "lucide-react";
 
 const Assessments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleSubmit = (data: any) => {
     console.log("Assignment data:", data);
     setIsDialogOpen(false);
@@ -44,7 +43,7 @@ const Assessments = () => {
             </Button>
           </div>
         </div>
-        
+
         <AssessmentsManager />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

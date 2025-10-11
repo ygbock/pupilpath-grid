@@ -13,7 +13,6 @@ import { Calendar, Plus } from "lucide-react";
 
 const Timetable = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleSubmit = (data: any) => {
     console.log("Timetable data:", data);
     setIsDialogOpen(false);
@@ -44,7 +43,7 @@ const Timetable = () => {
             </Button>
           </div>
         </div>
-        
+
         <TimetableManager />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

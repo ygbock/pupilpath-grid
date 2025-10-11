@@ -73,19 +73,17 @@ export default function TeacherStudents() {
   });
 
   const filteredStudents = students?.filter((student: any) =>
-    student?.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student?.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student?.grade_level?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   return (
-    <DashboardLayout userRole="teacher">
+    <DashboardLayout userRole="teacher"> 
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">My Students</h1>
           <p className="text-muted-foreground mt-1">View students in your classes</p>
         </div>
-        
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">

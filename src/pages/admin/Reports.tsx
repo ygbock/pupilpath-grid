@@ -13,7 +13,6 @@ import { FileText, Plus } from "lucide-react";
 
 const Reports = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleSubmit = (data: any) => {
     console.log("Report data:", data);
     setIsDialogOpen(false);
@@ -44,7 +43,7 @@ const Reports = () => {
             </Button>
           </div>
         </div>
-        
+
         <ReportsHub />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -61,6 +60,7 @@ const Reports = () => {
       </div>
     </DashboardLayout>
   );
-};
+}
+;
 
 export default Reports;

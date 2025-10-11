@@ -38,6 +38,7 @@ import StudentAttendance from "./pages/student/Attendance";
 import StudentTimetable from "./pages/student/Timetable";
 import StudentAssignments from "./pages/student/Assignments";
 import IDCardsPage from "./pages/admin/IDCards";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,16 @@ const App = () => (
           {INVITES_ENABLED && (
             <Route path="/invite/accept" element={<AcceptInvite />} />
           )}
+          
+          {/* Unified adaptive dashboard */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><RoleHome /></ProtectedRoute>} />

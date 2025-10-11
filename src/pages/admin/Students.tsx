@@ -15,7 +15,6 @@ import { useStudents } from "@/hooks/useStudents";
 const Students = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { createStudent } = useStudents();
-
   const handleSubmit = async (data: any) => {
     await createStudent.mutateAsync(data);
     setIsDialogOpen(false);

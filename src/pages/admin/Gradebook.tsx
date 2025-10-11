@@ -13,7 +13,6 @@ import { BookOpen, Plus } from "lucide-react";
 
 const Gradebook = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleSubmit = (data: any) => {
     console.log("Grade data:", data);
     setIsDialogOpen(false);
@@ -22,6 +21,7 @@ const Gradebook = () => {
   return (
     <DashboardLayout userRole="admin">
       <div className="space-y-6">
+        
         <div className="bg-gradient-subtle rounded-2xl p-8 border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

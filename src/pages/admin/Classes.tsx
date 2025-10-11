@@ -13,7 +13,6 @@ import { Plus, School } from "lucide-react";
 
 const Classes = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleSubmit = (data: any) => {
     console.log("Class data:", data);
     setIsDialogOpen(false);
@@ -59,6 +58,7 @@ const Classes = () => {
       </div>
     </DashboardLayout>
   );
-};
+}
+;
 
 export default Classes;
